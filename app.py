@@ -2,6 +2,10 @@ import os
 from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+import pytz
+
+# Timezone ayarı (Türkiye)
+os.environ['TZ'] = 'Europe/Istanbul'
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
