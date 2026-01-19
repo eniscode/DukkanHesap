@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Basit Muhasebe Sistemi">
+  <title>Dükkan - Muhasebe</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>💼 Dükkan</h1>
+    <nav>
+      <a href="/incomes">📈 Gelir</a>
+      <a href="/expenses">📉 Gider</a>
+      <a href="/invoices">📄 Faturalar</a>
+      <a href="/turnover">💹 Ciro</a>
+      <a href="/report">📊 Rapor</a>
+    </nav>
+  </header>
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <small>💳 Basit Muhasebe Sistemi</small>
+  </footer>
+</body>
+</html>

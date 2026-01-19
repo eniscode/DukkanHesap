@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+  .summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    border-top: 4px solid;
+    transition: transform 0.2s;
+  }
+  .summary-card:hover {
+    transform: translateY(-4px);
+  }
+  .summary-card.sales { border-top-color: #10b981; }
+  .summary-card.expenses { border-top-color: #ef4444; }
+  .summary-card.net { border-top-color: #3b82f6; }
+  .summary-card.margin { border-top-color: #f59e0b; }
+  
+  .summary-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  .summary-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .summary-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #111827;
+    margin-top: 8px;
+  }
+  
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .report-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: bold;
+  }
+  .report-table th {
+    padding: 16px 12px;
+    text-align: right;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .report-table td {
+    padding: 14px 12px;
+    text-align: right;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .report-table td:first-child,
+  .report-table th:first-child {
+    text-align: left;
+    font-weight: 600;
+  }
+  .report-table tbody tr {
+    transition: background 0.2s;
+  }
+  .report-table tbody tr:hover {
+    background-color: #f9fafb;
+  }
+  .total-row {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .total-row td {
+    padding: 18px 12px;
+    border-bottom: none;
+  }
+  .report-table .percent {
+    color: #10b981;
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .sales-col { color: #10b981; font-weight: 600; }
+  .expenses-col { color: #ef4444; font-weight: 600; }
+  .net-col { color: #3b82f6; font-weight: 600; }
+  
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+  }
+  .no-data-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+</style>
+
+<section class="card">
+  <h2 style="font-size: 28px; margin-bottom: 24px; color: #111827;">📊 Aylık Rapor</h2>
+
+  {% if report_list %}
+    <!-- Özet Kartlar -->
+    <div class="summary-grid">
+      <div class="summary-card sales">
+        <div class="summary-icon">💰</div>
+        <div class="summary-label">Toplam Satış</div>
+        <div class="summary-value">{{ total_income | tr_currency }}</div>
+      </div>
+      <div class="summary-card expenses">
+        <div class="summary-icon">💸</div>
+        <div class="summary-label">Toplam Masraf</div>
+        <div class="summary-value">{{ total_expense | tr_currency }}</div>
+      </div>
+      <div class="summary-card net">
+        <div class="summary-icon">🎯</div>
+        <div class="summary-label">Net Kar</div>
+        <div class="summary-value">{{ total_net | tr_currency }}</div>
+      </div>
+      <div class="summary-card margin">
+        <div class="summary-icon">📈</div>
+        <div class="summary-label">Ortalama Oran</div>
+        <div class="summary-value">{{ '%.1f'|format(total_margin) }}%</div>
+      </div>
+    </div>
+
+    <!-- Detaylı Tablo -->
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>📅 AY</th>
+          <th>💰 SATIŞ</th>
+          <th>💸 MASRAFLAR</th>
+          <th>🎯 NET KAR</th>
+          <th>📈 ORAN</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report_list %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td class="sales-col">{{ row.sales | tr_currency }}</td>
+            <td class="expenses-col">{{ row.expenses | tr_currency }}</td>
+            <td class="net-col">{{ row.net | tr_currency }}</td>
+            <td class="percent">{{ '%.2f'|format(row.margin) }}%</td>
+          </tr>
+        {% endfor %}
+        <tr class="total-row">
+          <td>🏆 TOPLAM</td>
+          <td>{{ total_income | tr_currency }}</td>
+          <td>{{ total_expense | tr_currency }}</td>
+          <td>{{ total_net | tr_currency }}</td>
+          <td class="percent">{{ '%.2f'|format(total_margin) }}%</td>
+        </tr>
+      </tbody>
+    </table>
+  {% else %}
+    <div class="no-data">
+      <div class="no-data-icon">📄</div>
+      <p style="font-size: 18px; font-weight: 600;">Henüz veri yok</p>
+      <p style="font-size: 14px; margin-top: 8px;">Gelir ve gider ekleyerek raporları görüntüleyin</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

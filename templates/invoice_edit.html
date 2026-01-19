@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card">
+  <h2>Fatura Düzenle</h2>
+  <form method="post" class="form-grid">
+    <label>
+      Tarih
+      <input type="date" name="date" value="{{ inv.date }}" required>
+    </label>
+
+    <label>
+      Tutar
+      <input type="text" name="amount" id="edit_amount" value="{{ '%.2f'|format(inv.amount) }}" placeholder="1.234,56" required>
+    </label>
+
+    <label class="full">
+      Açıklama
+      <textarea name="description" rows="2" placeholder="Fatura detayı">{{ inv.description or '' }}</textarea>
+    </label>
+
+    <div class="actions">
+      <button type="submit">Güncelle</button>
+      <a href="/invoices" style="margin-left:12px;">İptal</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  (function(){
+    function formatTRCurrency(input) {
+      let val = input.value.replace(/[^0-9,]/g, '');
+      const parts = val.split(',');
+      if(parts.length > 2) {
+        val = parts.slice(0, -1).join('') + ',' + parts[parts.length - 1];
+      }
+      const [intPart, decPart] = val.split(',');
+      if(intPart) {
+        let formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        input.value = decPart !== undefined ? formatted + ',' + decPart : formatted;
+      } else {
+        input.value = val;
+      }
+    }
+    
+    const amtInput = document.getElementById('edit_amount');
+    if(amtInput) {
+      // Yükleme sırasında formatla
+      let val = amtInput.value.replace(/\./g, '').replace(/,/g, '.');
+      if(!isNaN(val) && val !== '') {
+        amtInput.value = parseFloat(val).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      }
+      
+      // Yazarken gerçek zamanlı formatla
+      amtInput.addEventListener('input', function(){
+        formatTRCurrency(this);
+      });
+      
+      // Blur'da da formatla
+      amtInput.addEventListener('blur', function(){
+        let v = this.value.replace(/\./g, '').replace(/,/g, '.');
+        if(!isNaN(v) && v !== '') {
+          this.value = parseFloat(v).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

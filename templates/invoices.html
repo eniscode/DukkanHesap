@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card">
+  <h2>Fatura Girişi</h2>
+  <form method="post" class="form-grid">
+    <label>
+      Tarih
+      <input type="date" name="date" value="{{ today }}" required>
+    </label>
+
+    <label>
+      Tutar
+      <input type="text" name="amount" id="inv_amount" placeholder="1.234,56" required>
+    </label>
+
+    <label class="full">
+      Açıklama
+      <textarea name="description" rows="2" placeholder="Fatura detayı (opsiyonel)"></textarea>
+    </label>
+
+    <div class="actions">
+      <button type="submit">Ekle</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h3>Fatura Listesi</h3>
+  
+  {% set current_month = None %}
+  {% set month_total = 0 %}
+  
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>FATURA</th>
+        <th>Tutar</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in items %}
+        {% set inv_month = (inv.date.year, inv.date.month) %}
+        
+        {# Ay değiştiyse önceki ayın toplamını göster #}
+        {% if current_month and current_month != inv_month %}
+          <tr class="month-total-row">
+            <td colspan="2"><strong>AYLIK TOPLAM</strong></td>
+            <td><strong>{{ monthly_totals[current_month] | tr_currency }}</strong></td>
+            <td></td>
+          </tr>
+          <tr class="spacer"><td colspan="4"></td></tr>
+        {% endif %}
+        
+        <tr>
+          <td>{{ inv.date.strftime('%d.%m.%Y') }}</td>
+          <td>FATURA{% if inv.description %} - {{ inv.description }}{% endif %}</td>
+          <td>{{ inv.amount | tr_currency }}</td>
+          <td>
+            <a href="/invoice/edit/{{ inv.id }}" style="margin-right:8px;">Düzenle</a>
+            <form method="post" action="/invoice/delete/{{ inv.id }}" style="display:inline;" onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+              <button type="submit" class="btn-delete">Sil</button>
+            </form>
+          </td>
+        </tr>
+        
+        {% set current_month = inv_month %}
+      {% endfor %}
+      
+      {# Son ayın toplamı #}
+      {% if current_month %}
+        <tr class="month-total-row">
+          <td colspan="2"><strong>AYLIK TOPLAM</strong></td>
+          <td><strong>{{ monthly_totals[current_month] | tr_currency }}</strong></td>
+          <td></td>
+        </tr>
+      {% endif %}
+      
+      {% if not items %}
+        <tr><td colspan="4" class="muted">Henüz kayıt yok.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</section>
+
+<script>
+  (function(){
+    const amtInput = document.getElementById('inv_amount');
+    if(amtInput) {
+      amtInput.addEventListener('blur', function(){
+        let val = this.value.replace(/\./g, '').replace(/,/g, '.');
+        if(!isNaN(val) && val !== '') {
+          let num = parseFloat(val);
+          this.value = num.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      });
+    }
+  })();
+</script>
+
+<script>
+  (function(){
+    function formatTRCurrency(input) {
+      // Sadece rakamları ve virgülü tut
+      let val = input.value.replace(/[^0-9,]/g, '');
+      
+      // Birden fazla virgül varsa son biri hariç sil
+      const parts = val.split(',');
+      if(parts.length > 2) {
+        val = parts.slice(0, -1).join('') + ',' + parts[parts.length - 1];
+      }
+      
+      // Virgülden önceki kısmı nokta ile biçimlendir (binde ayırıcısı)
+      const [intPart, decPart] = val.split(',');
+      if(intPart) {
+        let formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        input.value = decPart !== undefined ? formatted + ',' + decPart : formatted;
+      } else {
+        input.value = val;
+      }
+    }
+    
+    const amtInput = document.getElementById('inv_amount');
+    if(amtInput) {
+      amtInput.addEventListener('input', function(){
+        formatTRCurrency(this);
+      });
+    }
+  })();
+</script>
+{% endblock %}

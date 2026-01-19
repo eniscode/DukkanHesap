@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card">
+  <h2>Günlük Giriş</h2>
+  <form method="post" class="form-grid" id="dailyForm">
+    <label>
+      Tarih
+      <input type="date" name="date" value="{{ (entry.date if entry else today) }}" required>
+    </label>
+
+    <label>
+      Nakit
+      <input type="number" step="0.01" name="cash_income" id="cash_income" value="{{ (entry.cash_income if entry else 0) }}" placeholder="0.00">
+    </label>
+
+    <label>
+      Kart
+      <input type="number" step="0.01" name="card_income" id="card_income" value="{{ (entry.card_income if entry else 0) }}" placeholder="0.00">
+    </label>
+
+    <label>
+      Toplam
+      <input type="number" step="0.01" name="total_income" id="total_income" value="{{ (entry.total_income if entry else 0) }}" readonly>
+    </label>
+
+    <label class="full">
+      Not (opsiyonel)
+      <textarea name="note" rows="2" placeholder="Not">{{ (entry.note if entry else '') }}</textarea>
+    </label>
+
+    <div class="actions">
+      <button type="submit">Kaydet / Güncelle</button>
+    </div>
+  </form>
+</section>
+
+<script>
+  function toFloat(v){
+    var n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+  function syncTotal(){
+    var cash = toFloat(document.getElementById('cash_income').value);
+    var card = toFloat(document.getElementById('card_income').value);
+    document.getElementById('total_income').value = (cash + card).toFixed(2);
+  }
+  document.getElementById('cash_income').addEventListener('input', syncTotal);
+  document.getElementById('card_income').addEventListener('input', syncTotal);
+  syncTotal();
+</script>
+{% endblock %}

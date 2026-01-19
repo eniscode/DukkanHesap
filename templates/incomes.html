@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card">
+  <h2>Gelir Girişi</h2>
+  <form method="post" class="form-grid">
+    <label>
+      Tarih
+      <input type="date" name="date" value="{{ today }}" required>
+    </label>
+
+    <label>
+      Kategori
+      <select name="category" required>
+        <option value="Ciro">Ciro</option>
+        <option value="Ek Gelir">Ek Gelir</option>
+      </select>
+    </label>
+
+    <label>
+      Tutar
+      <input type="text" step="0.01" name="amount" id="inc_amount" placeholder="1.234,56" required>
+    </label>
+
+    <label class="full">
+      Açıklama
+      <textarea name="description" rows="2" placeholder="Opsiyonel"></textarea>
+    </label>
+
+    <div class="actions">
+      <button type="submit">Ekle</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h3>Gelir Listesi</h3>
+  
+  <!-- Ay Seçici -->
+  <form method="get" class="form-grid" style="margin-bottom: 20px;">
+    <label>
+      Ay Seç
+      <input type="month" name="month" value="{{ selected_month }}" onchange="this.form.submit()">
+    </label>
+    <div>
+      {% if selected_month %}
+        <a href="/incomes" class="btn" style="display:inline-block; padding:8px 16px; background:#10b981; color:white; text-decoration:none; border-radius:4px;">Tümünü Göster</a>
+      {% endif %}
+    </div>
+  </form>
+  
+  <!-- Toplam Tutar -->
+  <div style="background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); padding: 16px; border-radius: 8px; margin-bottom: 16px; color: white; font-size: 18px; font-weight: bold; text-align: center;">
+    Toplam Gelir: {{ total | tr_currency }} TL
+  </div>
+  
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Kategori</th>
+        <th>Tutar</th>
+        <th>Açıklama</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in items %}
+        <tr>
+          <td>{{ i.date | tr_short_date }} ({{ i.date | tr_day }})</td>
+          <td>{{ i.category or '-' }}</td>
+          <td>{{ i.amount | tr_currency }}</td>
+          <td>{{ i.description or '-' }}</td>
+          <td>
+            <a href="/income/edit/{{ i.id }}" style="margin-right:8px;">Düzenle</a>
+            <form method="post" action="/income/delete/{{ i.id }}" style="display:inline;" onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+              <button type="submit" class="btn-delete">Sil</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      {% if not items %}
+        <tr><td colspan="5" class="muted">Henüz kayıt yok.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</section>
+
+<script>
+  (function(){
+    const amtInput = document.getElementById('inc_amount');
+    if(amtInput) {
+      amtInput.addEventListener('blur', function(){
+        let val = this.value.replace(/\./g, '').replace(/,/g, '.');
+        if(!isNaN(val) && val !== '') {
+          let num = parseFloat(val);
+          this.value = num.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      });
+    }
+  })();
+</script>
+
+<script>
+  (function(){
+    function formatTRCurrency(input) {
+      // Sadece rakamları ve virgülü tut
+      let val = input.value.replace(/[^0-9,]/g, '');
+      
+      // Birden fazla virgül varsa son biri hariç sil
+      const parts = val.split(',');
+      if(parts.length > 2) {
+        val = parts.slice(0, -1).join('') + ',' + parts[parts.length - 1];
+      }
+      
+      // Virgülden önceki kısmı nokta ile biçimlendir (binde ayırıcısı)
+      const [intPart, decPart] = val.split(',');
+      if(intPart) {
+        let formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        input.value = decPart !== undefined ? formatted + ',' + decPart : formatted;
+      } else {
+        input.value = val;
+      }
+    }
+    
+    const amtInput = document.getElementById('inc_amount');
+    if(amtInput) {
+      amtInput.addEventListener('input', function(){
+        formatTRCurrency(this);
+      });
+    }
+  })();
+</script>
+{% endblock %}
