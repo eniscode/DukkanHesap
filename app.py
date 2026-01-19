@@ -78,7 +78,7 @@ def parse_date(value):
     try:
         return datetime.strptime(value, "%Y-%m-%d").date()
     except Exception:
-        return date.today()
+        return get_turkey_date()
 
 
 # --------------------
@@ -110,6 +110,12 @@ TR_MONTHS = [
     "ARALIK",
 ]
 
+# Timezone-aware date getter
+def get_turkey_date():
+    """Turkey timezone'da bugünün tarihini döndür"""
+    tz = pytz.timezone('Europe/Istanbul')
+    return datetime.now(tz).date()
+
 @app.template_filter("tr_day")
 def tr_day(value):
     d = parse_date(value)
@@ -140,7 +146,7 @@ def index():
 
 @app.route("/daily-entry", methods=["GET", "POST"]) 
 def daily_entry():
-    today = date.today()
+    today = get_turkey_date()
     if request.method == "POST":
         form_date = parse_date(request.form.get("date"))
         cash_income = parse_float(request.form.get("cash_income"))
@@ -213,7 +219,7 @@ def expenses():
     # Toplam hesapla
     total = sum(item.amount for item in items)
     
-    return render_template("expenses.html", items=items, today=date.today(), 
+    return render_template("expenses.html", items=items, today=get_turkey_date(), 
                          selected_month=selected_month, total=total)
 
 
@@ -291,7 +297,7 @@ def incomes():
     # Toplam hesapla
     total = sum(item.amount for item in items)
     
-    return render_template("incomes.html", items=items, today=date.today(),
+    return render_template("incomes.html", items=items, today=get_turkey_date(),
                          selected_month=selected_month, total=total)
 
 
@@ -346,7 +352,7 @@ def _sum_range(model, column, start_d, end_d):
 
 @app.route("/turnover")
 def turnover():
-    today = date.today()
+    today = get_turkey_date()
 
     # Günlük
     daily_income = _sum_daily_income(today)
@@ -430,7 +436,7 @@ def invoices():
         key = (inv.date.year, inv.date.month)
         monthly_totals[key] += inv.amount
     
-    return render_template("invoices.html", items=items, monthly_totals=monthly_totals, today=date.today())
+    return render_template("invoices.html", items=items, monthly_totals=monthly_totals, today=get_turkey_date())
 
 
 @app.route("/invoice/delete/<int:id>", methods=["POST"])
